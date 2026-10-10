@@ -1,0 +1,162 @@
+From 5deb3d8c283cb91a4b32b3bc039fc97d23256c10 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Thorsten=20T=C3=B6pper?= <atsutane@freethoughts.de>
+Date: Sat, 10 Oct 2026 14:53:19 +0200
+Subject: [PATCH] Make compatible with gcc >= 15 and Python 3
+
+---
+ examples/fact.py   |  4 ++--
+ examples/factorial | 16 +++++++---------
+ lib/makefile       |  1 +
+ makefile           |  1 +
+ primes/makefile    |  2 +-
+ primes/matho-mult  |  2 +-
+ primes/matho-sum   |  2 +-
+ primes/primorial   | 12 +++++-------
+ 8 files changed, 19 insertions(+), 21 deletions(-)
+
+diff --git a/examples/fact.py b/examples/fact.py
+index 46bcd5b..5f81568 100644
+--- a/examples/fact.py
++++ b/examples/fact.py
+@@ -7,7 +7,7 @@
+ def factorial(x):
+ 	"Return x! (x factorial)."
+ 	if (x < 0 or (x % 1.0) != 0.0):
+-		raise ValueError, "Factorial argument must be a positive integer."
++		raise ValueError("Factorial argument must be a positive integer.")
+ 	if (x == 0):
+ 		return x + 1
+ 	d = x
+@@ -15,6 +15,6 @@ def factorial(x):
+ 		x -= 1
+ 		temp = d * x
+ 		if (temp <= d):
+-			raise ValueError, "Factorial result too large."
++			raise ValueError("Factorial result too large.")
+ 		d = temp
+ 	return d
+diff --git a/examples/factorial b/examples/factorial
+index 46caf84..639f46e 100755
+--- a/examples/factorial
++++ b/examples/factorial
+@@ -8,13 +8,11 @@ import os
+ import string
+ 
+ def usage():
+-	print "This program calculates large factorials."
+-	print "Requires and tests \"fact.py\"."
+-	print
+-	print "Usage: %s integer_expressions" % os.path.basename(sys.argv[0])
+-	print
+-	print "The integer expressions should be separated by spaces."
+-	print "A factorial is the product of all positive integers <= a given integer."
++	print("This program calculates large factorials.")
++	print("Requires and tests \"fact.py\".")
++	print("\nUsage: %s integer_expressions" % os.path.basename(sys.argv[0]))
++	print("\nThe integer expressions should be separated by spaces.")
++	print("A factorial is the product of all positive integers <= a given integer.")
+ 	sys.exit(2)
+ 
+ args = sys.argv[1:]
+@@ -23,8 +21,8 @@ if (args == []):
+ else:
+ 	try:
+ 		num = eval(string.join(args))
+-		print "factorial(", num, ") =", factorial(num)
++		print("factorial(", num, ") =", factorial(num))
+ 	except:
+ 		for arg in args:
+ 			num = eval(arg)
+-			print "factorial(", num, ") =", factorial(num)
++			print("factorial(", num, ") =", factorial(num))
+diff --git a/lib/makefile b/lib/makefile
+index 352e6f7..f59169e 100644
+--- a/lib/makefile
++++ b/lib/makefile
+@@ -11,6 +11,7 @@ VERSION		= `cat ../VERSION`
+ OPTFLAGS	?= -g -O3 -Wall -Wshadow -Wno-char-subscripts -Wno-unused-variable # gcc specific flags; can be removed
+ CFLAGS		?= $(OPTFLAGS)
+ CFLAGS		+= -fexceptions -DLIBRARY -DVERSION=\"$(VERSION)\" # necessary C compiler flags
++CFLAGS		+= -std=gnu99 # required for gcc releases of at least 15 or later
+ LDLIBS		+= -lm # system libraries to link
+ 
+ # Install directories follow; installs everything in $(DESTDIR)/usr/local by default.
+diff --git a/makefile b/makefile
+index 9e82c15..5793bab 100644
+--- a/makefile
++++ b/makefile
+@@ -70,6 +70,7 @@ VERSION		= `cat VERSION`
+ OPTFLAGS	?= $(CC_OPTIMIZE) -Wall -Wshadow -Wno-char-subscripts # optional gcc specific flags
+ CFLAGS		?= $(OPTFLAGS)
+ CFLAGS		+= -fexceptions -DUNIX -DVERSION=\"$(VERSION)\"
++CFLAGS		+= -std=gnu99 # required for gcc releases of at least 15 or later
+ LDLIBS		+= -lm # libraries to link with to create the Mathomatic executable
+ 
+ # Run "make READLINE=1" to include the optional readline editing and history support:
+diff --git a/primes/makefile b/primes/makefile
+index a89ec90..22e2b19 100644
+--- a/primes/makefile
++++ b/primes/makefile
+@@ -17,7 +17,7 @@ CC_OPTIMIZE	= -O3 # Default C compiler optimization flags that are safe.
+ 
+ OPTFLAGS	?= $(CC_OPTIMIZE) -Wall -Wshadow -Wno-char-subscripts # gcc specific flags; change for other C compilers.
+ CFLAGS		?= $(OPTFLAGS)
+-#CFLAGS		+= -std=gnu99 # Uses the Gnu99 standard; may require setting this on gcc command line if using an older compiler.
++CFLAGS		+= -std=gnu99 # Uses the Gnu99 standard; may require setting this on gcc command line if using a newer compiler.
+ LDLIBS		+= -lm
+ 
+ # Install directories follow, installs everything in $(DESTDIR)/usr/local by default.
+diff --git a/primes/matho-mult b/primes/matho-mult
+index ff9d599..80d66de 100755
+--- a/primes/matho-mult
++++ b/primes/matho-mult
+@@ -24,4 +24,4 @@ else:
+ 	# multiply together the command-line args
+ 	for arg in args:
+ 		prod *= int(arg)
+-print prod
++print(prod)
+diff --git a/primes/matho-sum b/primes/matho-sum
+index 34b5bbd..0598af8 100755
+--- a/primes/matho-sum
++++ b/primes/matho-sum
+@@ -21,4 +21,4 @@ else:
+ 	# sum together the command-line args
+ 	for arg in args:
+ 		sum += int(arg)
+-print sum
++print(sum)
+diff --git a/primes/primorial b/primes/primorial
+index e5c55fe..bea7751 100755
+--- a/primes/primorial
++++ b/primes/primorial
+@@ -16,11 +16,9 @@ import os
+ import sys
+ 
+ def usage(ev):
+-	print "This program calculates large primorials."
+-	print
+-	print "Usage: %s integers" % os.path.basename(sys.argv[0])
+-	print
+-	print "A primorial is the product of all primes up to the given number."
++	print("This program calculates large primorials.")
++	print("\nUsage: %s integers" % os.path.basename(sys.argv[0]))
++	print ("\nA primorial is the product of all primes up to the given number.")
+ 	sys.exit(ev)
+ 
+ def output_primorial(arg):
+@@ -36,9 +34,9 @@ else:
+ 	for arg in args:
+ 		try:
+ 			if (int(arg) < 1):
+-				print >>sys.stderr, "Number too small."
++				print("Number too small.", file=sys.stderr)
+ 				sys.exit(1)
+ 		except:
+-			print >>sys.stderr, "Positive integer required."
++			print("Positive integer required.", file=sys.stderr)
+ 			usage(1)
+ 		output_primorial(arg)
+-- 
+2.56.0
+
